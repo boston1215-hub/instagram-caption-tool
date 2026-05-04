@@ -84,11 +84,7 @@
     </div>
   </div>
 
-  <div class="apikey-area">
-    <label>Anthropic APIキー</label>
-    <input type="password" id="api-key" placeholder="sk-ant-..." autocomplete="off">
-    <div class="apikey-note">※ キーはこのブラウザ内のみで使用されます</div>
-  </div>
+
 
   <div class="section">
     <label>料理の写真（任意）</label>
@@ -176,13 +172,11 @@ function selectTone(btn, tone) {
 }
 
 async function generateCaption() {
-  const apiKey = document.getElementById('api-key').value.trim();
   const dishName = document.getElementById('dish-name').value.trim();
   const memo = document.getElementById('memo').value.trim();
   const errEl = document.getElementById('error-msg');
   errEl.textContent = '';
 
-  if (!apiKey) { errEl.textContent = 'APIキーを入力してください'; return; }
   if (!dishName) { errEl.textContent = '料理名を入力してください'; return; }
 
   const btn = document.getElementById('gen-btn');
@@ -228,8 +222,6 @@ ${tonePrompts[selectedTone]}
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
         model: 'claude-opus-4-6',
