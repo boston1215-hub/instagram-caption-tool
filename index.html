@@ -420,8 +420,9 @@ async function generateCaption() {
 
     const data = await res.json();
     const text = data.content.map(b => b.text || '').join('');
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    const jsonMatch = text.match(/\{[\s\S]*"captions"[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('生成失敗。再度お試しください。');
+    const parsed = JSON.parse(jsonMatch[0]);
     variations = parsed.captions || [];
     showVariation(0);
     document.getElementById('result-area').style.display = 'block';
