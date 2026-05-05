@@ -126,15 +126,17 @@
       <img id="preview-img" alt="プレビュー">
     </div>
 
-    <div class="section">
-      <label id="input-label">料理名・場所</label>
-      <input type="text" id="main-input" placeholder="" maxlength="80">
+    <div id="main-input-section">
+      <div class="section">
+        <label id="input-label">料理名・場所</label>
+        <input type="text" id="main-input" placeholder="" maxlength="80">
+      </div>
+      <div class="section">
+        <label>一言メモ（任意）</label>
+        <textarea id="memo" placeholder="補足があれば"></textarea>
+      </div>
     </div>
-
-    <div class="section">
-      <label>一言メモ（任意）</label>
-      <textarea id="memo" placeholder="補足があれば"></textarea>
-    </div>
+    <div id="custom-input-section" style="display:none;"></div>
 
     <div class="section">
       <label>トーン</label>
@@ -285,6 +287,54 @@ const ACCOUNTS = [
       'くにさんの独り言': 'Kuniさんの仕事観・気づき・日常の一コマ。鋭いけど親しみやすく。プロデューサー目線で。',
       'お知らせ': 'シンプルで明快に。でも無味乾燥にならず、人の温度感を残して。'
     }
+  },
+  {
+    id: 'aki',
+    name: 'aki さん専用',
+    sub: '甲山 晶 / 釣り・グルメ・ライフスタイル',
+    avatar: '🎣',
+    color: '#1a6b5a',
+    instaUrl: 'https://www.instagram.com/shin.joungsook77/',
+    inputLabel: '投稿カテゴリを選んでください',
+    inputPlaceholder: '',
+    tones: ['日本語', '韓国語', '日本語＋韓国語'],
+    systemPrompt: `あなたは甲山晶（shin.joungsook77）さんのInstagramキャプションを書く専門家です。
+
+akiさんについて：
+- 韓国出身、日本在住（千葉エリア）の女性（48歳）
+- 韓国の釣り番組に出演経験があるほどの釣りのプロ
+- 海釣り・船釣りが中心。季節の魚（天然トラフグ・太刀魚・イカ・タコ・金目鯛・モロコなど）を追いかける
+- 大物釣りが得意。45キロのモロコを釣り上げるほどのパワフルさ
+- 料理の腕前も抜群。釣った魚をエストプロッシモで調理してもらうこともある
+- 愛犬チョコ（トイプードル）＆ラテとの生活も投稿の大切な一部
+- 韓国と日本を行き来するライフスタイル。韓国帰省時の投稿もある
+- 温かく明るい人柄、パーティー好き、モエ・エ・シャンドンが似合う女性
+
+実際の投稿スタイル：
+- 釣果はシンプルに一言で決める（「モロコ45キロ❤️」など）
+- 韓国語と日本語を自然にミックス
+- 愛犬投稿はゆるく短く（「今日はチョコをカットする日^^*」）
+- 絵文字は❤️💕🎣🐟などを好んで使う
+- 長々と説明しない。余白を大切にする
+
+キャプションのルール：
+- 釣果・愛犬系：30〜80文字程度でシンプルに
+- 料理・パーティー系：80〜150文字程度
+- 絵文字は1〜3個、使いすぎない
+- 日本語の場合：ハッシュタグ3〜5個（#釣り #船釣り #五エム丸 など）
+- 韓国語の場合：ハッシュタグを韓국語で（#낚시 #선상낚시 #인생은즐겁게 など）
+- 両言語の場合：日本語→韓国語の順で`,
+    tonePrompts: {
+      '日本語': '日本語のみでキャプションを作成。自然体で親しみやすく。',
+      '韓国語': '韓国語のみでキャプションを作成。自然体で親しみやすく。',
+      '日本語＋韓国語': '日本語キャプションの後に改行を入れて、同じ内容を韓国語でも書く。'
+    },
+    customInputs: [
+      { id: 'category', label: '投稿カテゴリ', type: 'select', options: ['釣果報告', '料理・食事', '愛犬', '韓国・帰省', 'その他'] },
+      { id: 'fish', label: '魚の名前（釣果の時）', type: 'text', placeholder: '例：天然トラフグ、太刀魚、金目鯛' },
+      { id: 'spot', label: '釣り場・場所', type: 'text', placeholder: '例：千葉沖、相模湾、東京湾' },
+      { id: 'memo', label: '一言メモ', type: 'textarea', placeholder: '例：大物が釣れた！天気最高、仲間と一緒に など' }
+    ]
   }
 ];
 
@@ -318,10 +368,31 @@ function selectAccount(id) {
   document.getElementById('tool-avatar').textContent = currentAccount.avatar;
   document.getElementById('tool-name').textContent = currentAccount.name;
   document.getElementById('tool-sub').textContent = currentAccount.sub;
-  document.getElementById('input-label').textContent = currentAccount.inputLabel;
-  document.getElementById('main-input').placeholder = currentAccount.inputPlaceholder;
   document.getElementById('insta-link').href = currentAccount.instaUrl;
   document.querySelector('.insta-btn').style.background = currentAccount.color;
+
+  // カスタム入力フォーム or 標準フォーム
+  const mainInputSection = document.getElementById('main-input-section');
+  const customInputSection = document.getElementById('custom-input-section');
+
+  if (currentAccount.customInputs) {
+    mainInputSection.style.display = 'none';
+    customInputSection.style.display = 'block';
+    customInputSection.innerHTML = currentAccount.customInputs.map(inp => {
+      if (inp.type === 'select') {
+        return `<div class="section"><label>${inp.label}</label><select id="custom-${inp.id}" style="width:100%;padding:11px 13px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:15px;font-family:inherit;outline:none;">${inp.options.map(o => `<option>${o}</option>`).join('')}</select></div>`;
+      } else if (inp.type === 'textarea') {
+        return `<div class="section"><label>${inp.label}</label><textarea id="custom-${inp.id}" placeholder="${inp.placeholder}" style="width:100%;padding:11px 13px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:15px;font-family:inherit;resize:none;height:76px;"></textarea></div>`;
+      } else {
+        return `<div class="section"><label>${inp.label}</label><input type="text" id="custom-${inp.id}" placeholder="${inp.placeholder}" style="width:100%;padding:11px 13px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:15px;font-family:inherit;"></div>`;
+      }
+    }).join('');
+  } else {
+    mainInputSection.style.display = 'block';
+    customInputSection.style.display = 'none';
+    document.getElementById('input-label').textContent = currentAccount.inputLabel;
+    document.getElementById('main-input').placeholder = currentAccount.inputPlaceholder;
+  }
 
   // トーンボタン描画
   const toneGrid = document.getElementById('tone-grid');
@@ -334,8 +405,8 @@ function selectAccount(id) {
   photoBase64 = null;
   document.getElementById('preview-img').style.display = 'none';
   document.getElementById('upload-text').textContent = 'タップして写真を選択';
-  document.getElementById('main-input').value = '';
-  document.getElementById('memo').value = '';
+  if (document.getElementById('main-input')) document.getElementById('main-input').value = '';
+  if (document.getElementById('memo')) document.getElementById('memo').value = '';
   document.getElementById('result-area').style.display = 'none';
   document.getElementById('error-msg').textContent = '';
 
@@ -371,10 +442,20 @@ function selectTone(btn, tone) {
 }
 
 async function generateCaption() {
-  const mainInput = document.getElementById('main-input').value.trim();
-  const memo = document.getElementById('memo').value.trim();
   const errEl = document.getElementById('error-msg');
   errEl.textContent = '';
+
+  let mainInput = '';
+  if (currentAccount.customInputs) {
+    const parts = currentAccount.customInputs.map(inp => {
+      const el = document.getElementById('custom-' + inp.id);
+      return el && el.value.trim() ? inp.label + '：' + el.value.trim() : '';
+    }).filter(Boolean);
+    mainInput = parts.join('\n');
+  } else {
+    mainInput = document.getElementById('main-input').value.trim();
+  }
+  const memo = document.getElementById('memo') ? document.getElementById('memo').value.trim() : '';
 
   if (!mainInput) { errEl.textContent = '内容を入力してください'; return; }
 
