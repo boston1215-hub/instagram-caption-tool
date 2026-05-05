@@ -3,39 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Instagram キャプション生成 | Est!prossimo</title>
+<title>Instagram キャプション生成ツール</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #faf9f7; color: #1a1a1a; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #faf9f7; color: #1a1a1a; min-height: 100vh; }
   .container { max-width: 480px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
-  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #e8e4de; }
-  .logo { width: 44px; height: 44px; border-radius: 50%; background: #d4a843; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; letter-spacing: 0.05em; }
-  .header-text h1 { font-size: 16px; font-weight: 600; color: #1a1a1a; }
-  .header-text p { font-size: 12px; color: #888; margin-top: 2px; }
+
+  /* 選択画面 */
+  .select-screen { display: block; }
+  .select-header { text-align: center; padding: 2rem 0 1.5rem; }
+  .select-header h1 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+  .select-header p { font-size: 13px; color: #999; }
+  .account-list { display: flex; flex-direction: column; gap: 12px; margin-top: 1.5rem; }
+  .account-card {
+    background: #fff; border: 1px solid #e8e4de; border-radius: 14px;
+    padding: 1.125rem 1.25rem; cursor: pointer; display: flex; align-items: center; gap: 14px;
+    transition: all 0.15s;
+  }
+  .account-card:active { transform: scale(0.98); border-color: #d4a843; }
+  .account-avatar {
+    width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .account-info h3 { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .account-info p { font-size: 12px; color: #999; margin-top: 2px; }
+  .account-arrow { margin-left: auto; color: #ccc; font-size: 18px; }
+
+  /* ツール画面 */
+  .tool-screen { display: none; }
+  .tool-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.75rem; padding-bottom: 1rem; border-bottom: 1px solid #e8e4de; }
+  .back-btn { background: none; border: none; cursor: pointer; padding: 4px 8px 4px 0; font-size: 20px; color: #999; }
+  .tool-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .tool-header-text h2 { font-size: 15px; font-weight: 600; }
+  .tool-header-text p { font-size: 12px; color: #999; margin-top: 1px; }
+
   .section { margin-bottom: 1.25rem; }
   label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
   input[type="text"], textarea {
-    width: 100%; padding: 11px 13px;
-    border: 1px solid #ddd; border-radius: 10px;
-    background: #fff; color: #1a1a1a;
-    font-size: 15px; font-family: inherit;
+    width: 100%; padding: 11px 13px; border: 1px solid #ddd; border-radius: 10px;
+    background: #fff; color: #1a1a1a; font-size: 15px; font-family: inherit;
     outline: none; transition: border-color 0.15s;
   }
   input[type="text"]:focus, textarea:focus { border-color: #d4a843; }
   textarea { resize: none; height: 76px; line-height: 1.5; }
-  .apikey-area { background: #fff8ed; border: 1px solid #f0d080; border-radius: 10px; padding: 12px; margin-bottom: 1.5rem; }
-  .apikey-area label { color: #8a6800; margin-bottom: 6px; }
-  .apikey-area input { border-color: #f0d080; background: #fff; font-size: 13px; font-family: monospace; }
-  .apikey-note { font-size: 11px; color: #a07820; margin-top: 5px; }
+
   .upload-area {
-    border: 1.5px dashed #ddd; border-radius: 10px;
-    padding: 1.5rem; text-align: center; cursor: pointer;
-    background: #fff; position: relative;
+    border: 1.5px dashed #ddd; border-radius: 10px; padding: 1.5rem;
+    text-align: center; cursor: pointer; background: #fff; position: relative;
   }
   .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
   .upload-icon { font-size: 28px; margin-bottom: 6px; }
   .upload-text { font-size: 13px; color: #999; }
   #preview-img { width: 100%; border-radius: 10px; margin-top: 10px; display: none; max-height: 220px; object-fit: cover; }
+
   .tone-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .tone-btn {
     padding: 10px 8px; border: 1px solid #ddd; border-radius: 10px;
@@ -43,112 +63,248 @@
     text-align: center; font-family: inherit;
   }
   .tone-btn.active { border-color: #d4a843; color: #7a5c00; background: #fdf6e3; font-weight: 600; }
+
   .gen-btn {
     width: 100%; padding: 14px; background: #d4a843; color: #fff; border: none;
     border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
     margin-top: 0.5rem; font-family: inherit;
   }
   .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
   .error-msg { font-size: 13px; color: #c0392b; margin-top: 8px; text-align: center; min-height: 20px; }
+
   .result-area { margin-top: 1.5rem; display: none; }
-  .variation-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .variation-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
   .var-tab {
     padding: 6px 14px; border: 1px solid #ddd; border-radius: 99px;
     background: #fff; color: #888; font-size: 12px; cursor: pointer; font-family: inherit;
   }
   .var-tab.active { border-color: #d4a843; color: #7a5c00; background: #fdf6e3; font-weight: 600; }
-  .result-card {
-    background: #fff; border: 1px solid #e8e4de; border-radius: 12px;
-    padding: 1rem 1.125rem; margin-bottom: 10px;
-  }
+  .result-card { background: #fff; border: 1px solid #e8e4de; border-radius: 12px; padding: 1rem 1.125rem; margin-bottom: 10px; }
   .result-label { font-size: 10px; color: #bbb; margin-bottom: 8px; letter-spacing: 0.1em; font-weight: 600; }
   .result-text { font-size: 14px; color: #1a1a1a; line-height: 1.8; white-space: pre-wrap; }
   .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .copy-btn, .insta-btn {
     padding: 11px; border-radius: 10px; font-size: 13px; cursor: pointer;
-    text-align: center; font-family: inherit; font-weight: 500; text-decoration: none;
-    display: block;
+    text-align: center; font-family: inherit; font-weight: 500; text-decoration: none; display: block;
   }
   .copy-btn { background: #f0ece4; color: #555; border: none; }
-  .insta-btn { background: #d4a843; color: #fff; border: none; }
+  .insta-btn { color: #fff; border: none; }
   .footer { margin-top: 2rem; text-align: center; font-size: 11px; color: #ccc; }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="header">
-    <div class="logo">EST</div>
-    <div class="header-text">
-      <h1>Instagram キャプション生成</h1>
-      <p>Est!prossimo 専用ツール</p>
+
+  <!-- アカウント選択画面 -->
+  <div class="select-screen" id="select-screen">
+    <div class="select-header">
+      <h1>📸 キャプション生成</h1>
+      <p>アカウントを選択してください</p>
     </div>
+    <div class="account-list" id="account-list"></div>
   </div>
 
-
-
-  <div class="section">
-    <label>料理の写真（任意）</label>
-    <div class="upload-area">
-      <input type="file" accept="image/*" id="photo-input" onchange="handlePhoto(this)">
-      <div class="upload-icon">📷</div>
-      <div class="upload-text" id="upload-text">タップして写真を選択</div>
+  <!-- ツール画面 -->
+  <div class="tool-screen" id="tool-screen">
+    <div class="tool-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="tool-avatar" id="tool-avatar"></div>
+      <div class="tool-header-text">
+        <h2 id="tool-name"></h2>
+        <p id="tool-sub"></p>
+      </div>
     </div>
-    <img id="preview-img" alt="プレビュー">
-  </div>
 
-  <div class="section">
-    <label>料理名</label>
-    <input type="text" id="dish-name" placeholder="例：房総鯵のカルパッチョ" maxlength="80">
-  </div>
-
-  <div class="section">
-    <label>一言メモ（任意）</label>
-    <textarea id="memo" placeholder="例：今日だけの日替わり、旬のアジ使用、ランチ限定 など"></textarea>
-  </div>
-
-  <div class="section">
-    <label>トーン</label>
-    <div class="tone-grid">
-      <button class="tone-btn active" onclick="selectTone(this,'casual')">カジュアル</button>
-      <button class="tone-btn" onclick="selectTone(this,'elegant')">上品・丁寧</button>
-      <button class="tone-btn" onclick="selectTone(this,'hungry')">食欲そそる</button>
-      <button class="tone-btn" onclick="selectTone(this,'story')">ストーリー風</button>
+    <div class="section">
+      <label>写真（任意）</label>
+      <div class="upload-area">
+        <input type="file" accept="image/*" id="photo-input" onchange="handlePhoto(this)">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text" id="upload-text">タップして写真を選択</div>
+      </div>
+      <img id="preview-img" alt="プレビュー">
     </div>
-  </div>
 
-  <button class="gen-btn" id="gen-btn" onclick="generateCaption()">キャプションを生成する</button>
-  <div class="error-msg" id="error-msg"></div>
-
-  <div class="result-area" id="result-area">
-    <div class="variation-tabs" id="var-tabs"></div>
-    <div class="result-card">
-      <div class="result-label">CAPTION</div>
-      <div class="result-text" id="result-text"></div>
+    <div class="section">
+      <label id="input-label">料理名・場所</label>
+      <input type="text" id="main-input" placeholder="" maxlength="80">
     </div>
-    <div class="action-row">
-      <button class="copy-btn" onclick="copyCaption()">コピーする</button>
-      <a class="insta-btn" href="https://www.instagram.com/est.prossimo/" target="_blank">Instagramを開く</a>
-    </div>
-  </div>
 
-  <div class="footer">Powered by Claude API · Est!prossimo</div>
+    <div class="section">
+      <label>一言メモ（任意）</label>
+      <textarea id="memo" placeholder="補足があれば"></textarea>
+    </div>
+
+    <div class="section">
+      <label>トーン</label>
+      <div class="tone-grid" id="tone-grid"></div>
+    </div>
+
+    <button class="gen-btn" id="gen-btn" onclick="generateCaption()">キャプションを生成する</button>
+    <div class="error-msg" id="error-msg"></div>
+
+    <div class="result-area" id="result-area">
+      <div class="variation-tabs" id="var-tabs"></div>
+      <div class="result-card">
+        <div class="result-label">CAPTION</div>
+        <div class="result-text" id="result-text"></div>
+      </div>
+      <div class="action-row">
+        <button class="copy-btn" onclick="copyCaption()">コピーする</button>
+        <a class="insta-btn" id="insta-link" href="#" target="_blank">Instagramを開く</a>
+      </div>
+    </div>
+
+    <div class="footer">Powered by Claude API</div>
+  </div>
 </div>
 
 <script>
 const PROXY_URL = 'https://caption-proxy.boston1215.workers.dev/';
 
-let selectedTone = 'casual';
+// ===== アカウント設定 =====
+const ACCOUNTS = [
+  {
+    id: 'est',
+    name: 'Est!prossimo',
+    sub: 'エスト！プロッシモ',
+    avatar: 'EST',
+    color: '#d4a843',
+    instaUrl: 'https://www.instagram.com/est.prossimo/',
+    inputLabel: '料理名',
+    inputPlaceholder: '例：房総鯵のカルパッチョ',
+    tones: ['カジュアル', '上品・丁寧', '食欲そそる', 'ストーリー風'],
+    systemPrompt: `あなたはEst!prossimo（エスト！プロッシモ）というイタリアンレストランのInstagramキャプションを書く専門家です。
+
+お店について：
+- 千葉駅近く（創業29年）の人気イタリアン
+- 「千産千消」がテーマ：房総・千葉の新鮮な地元食材を使用
+- 契約農家から直送の野菜、旬の魚介・肉
+- グラスワインは常時20種以上、ソムリエが選定
+- 1F：気軽なオステリア＆バー　2F：トラットリア
+- 食べログ「イタリアンEAST百名店2025」選出
+
+キャプションのルール：
+- 150〜200文字程度
+- ハッシュタグは最後に5〜8個
+- 必ず「#エストプロッシモ」「#千産千消」「#千葉グルメ」を含める
+- 日本語のみ`,
+    tonePrompts: {
+      'カジュアル': '親しみやすくフレンドリーなトーンで。絵文字を2〜3個使い、軽やかに。',
+      '上品・丁寧': '上品で丁寧なトーンで。絵文字は控えめに1〜2個。',
+      '食欲そそる': '食欲をそそる表現をたっぷり使って。香り・食感・見た目を具体的に描写。絵文字3〜4個。',
+      'ストーリー風': '料理が生まれるまでの背景や食材のストーリーを交えて。詩的でリズムのある文体で。'
+    }
+  },
+  {
+    id: 'kuni',
+    name: 'h.kuni5',
+    sub: 'Kuni 個人アカウント',
+    avatar: 'K',
+    color: '#5b7fa6',
+    instaUrl: 'https://www.instagram.com/h.kuni5/',
+    inputLabel: '料理名・場所・ワイン名など',
+    inputPlaceholder: '例：エストのカルパッチョ、花とミツバチ',
+    tones: ['いつも通り', 'しみじみ系', 'さらっと短め', '場の空気重視'],
+    systemPrompt: `あなたはh.kuni5というInstagramアカウントのキャプションを書く専門家です。
+
+このアカウントの人物について：
+- 千葉在住の経営者・プロデューサー（50代男性）
+- 主な活動エリアは千葉・裏千葉エリア
+- 仕事仲間やエストの常連さん（女性も多い）との食事が多い
+- グルメ・ワイン好きだが食レポはしない。「場の空気」と「人との時間」を切り取る
+- 飾らない日常語で情景が浮かぶ文章を書く
+- オチや余韻がある（「気づいたらボトル空いてた〜」「寒っと言いながら退散したような気がする...」）
+- 自分語りでなく「この人と飲みたい・食べたい」と思わせる投稿が持ち味
+- ワインはボトルで頼むことが多い。最初の一杯はスパークリング・白ワイン・ビール・ハイボールなど気分次第
+- 「ふらっと」「気軽に」という表現は使わない。ちゃんと目的を持って行く人
+- ハッシュタグは最小限、主張しすぎない
+
+実際の投稿例：
+「千葉駅を降りるとシトシト雨／傘もないし、ちょっと雨宿りついでに走ってお店へ／今日のワインは花とミツバチ🐝 エチケットの可愛らしさより、しっかり目でスッキリ。／あとからお知り合いの社長さんが来られて、即席誕生日お祝い会？／そして雨もパラパラとなった頃に「寒っ」と言いながら退散したような気がする...」
+
+絶対にやってはいけないこと：
+- 「ふらっと」「気軽に」などの表現を使う
+- グラスワインを頼んだ設定にする（ボトルが基本）
+- 食レポ・料理説明に終始する
+- 絵文字を多用する
+
+キャプションのルール：
+- 100〜180文字程度
+- 改行を使ってリズムを作る
+- ハッシュタグは最後に3〜5個程度、控えめに
+- 日本語のみ
+- 絵文字は0〜2個まで`,
+    tonePrompts: {
+      'いつも通り': 'いつもの自然体で。場の空気と食・酒を軽やかに絡めて。',
+      'しみじみ系': '人との時間や思い出がじんわり滲み出るトーンで。',
+      'さらっと短め': '80〜100文字くらいで、一言二言でさらっと。',
+      '場の空気重視': '食より「誰と・どんな夜だったか」を中心に描写。'
+    }
+  }
+];
+
+let currentAccount = null;
+let selectedTone = '';
 let photoBase64 = null;
 let photoMediaType = 'image/jpeg';
 let variations = [];
 
-const tonePrompts = {
-  casual: '親しみやすくフレンドリーなトーンで。絵文字を2〜3個使い、軽やかに。',
-  elegant: '上品で丁寧なトーンで。絵文字は控えめに1〜2個。落ち着いた言葉選びで。',
-  hungry: '食欲をそそる表現をたっぷり使って。香り・食感・見た目を具体的に描写して。絵文字3〜4個。',
-  story: 'その料理が生まれるまでの背景や食材のストーリーを交えて。詩的でリズムのある文体で。'
-};
-const toneLabels = { casual:'カジュアル', elegant:'上品・丁寧', hungry:'食欲そそる', story:'ストーリー風' };
+// アカウント一覧を描画
+function renderAccountList() {
+  const list = document.getElementById('account-list');
+  list.innerHTML = ACCOUNTS.map(acc => `
+    <div class="account-card" onclick="selectAccount('${acc.id}')">
+      <div class="account-avatar" style="background:${acc.color}">${acc.avatar}</div>
+      <div class="account-info">
+        <h3>${acc.name}</h3>
+        <p>${acc.sub}</p>
+      </div>
+      <span class="account-arrow">›</span>
+    </div>
+  `).join('');
+}
+
+function selectAccount(id) {
+  currentAccount = ACCOUNTS.find(a => a.id === id);
+  if (!currentAccount) return;
+
+  // ヘッダー設定
+  document.getElementById('tool-avatar').style.background = currentAccount.color;
+  document.getElementById('tool-avatar').textContent = currentAccount.avatar;
+  document.getElementById('tool-name').textContent = currentAccount.name;
+  document.getElementById('tool-sub').textContent = currentAccount.sub;
+  document.getElementById('input-label').textContent = currentAccount.inputLabel;
+  document.getElementById('main-input').placeholder = currentAccount.inputPlaceholder;
+  document.getElementById('insta-link').href = currentAccount.instaUrl;
+  document.querySelector('.insta-btn').style.background = currentAccount.color;
+
+  // トーンボタン描画
+  const toneGrid = document.getElementById('tone-grid');
+  toneGrid.innerHTML = currentAccount.tones.map((t, i) => `
+    <button class="tone-btn ${i === 0 ? 'active' : ''}" onclick="selectTone(this,'${t}')">${t}</button>
+  `).join('');
+  selectedTone = currentAccount.tones[0];
+
+  // リセット
+  photoBase64 = null;
+  document.getElementById('preview-img').style.display = 'none';
+  document.getElementById('upload-text').textContent = 'タップして写真を選択';
+  document.getElementById('main-input').value = '';
+  document.getElementById('memo').value = '';
+  document.getElementById('result-area').style.display = 'none';
+  document.getElementById('error-msg').textContent = '';
+
+  // 画面切り替え
+  document.getElementById('select-screen').style.display = 'none';
+  document.getElementById('tool-screen').style.display = 'block';
+}
+
+function goBack() {
+  document.getElementById('tool-screen').style.display = 'none';
+  document.getElementById('select-screen').style.display = 'block';
+}
 
 function handlePhoto(input) {
   const file = input.files[0];
@@ -172,37 +328,22 @@ function selectTone(btn, tone) {
 }
 
 async function generateCaption() {
-  const dishName = document.getElementById('dish-name').value.trim();
+  const mainInput = document.getElementById('main-input').value.trim();
   const memo = document.getElementById('memo').value.trim();
   const errEl = document.getElementById('error-msg');
   errEl.textContent = '';
 
-  if (!dishName) { errEl.textContent = '料理名を入力してください'; return; }
+  if (!mainInput) { errEl.textContent = '内容を入力してください'; return; }
 
   const btn = document.getElementById('gen-btn');
   btn.disabled = true;
   btn.textContent = '生成中…';
   document.getElementById('result-area').style.display = 'none';
 
-  const systemPrompt = `あなたはEst!prossimo（エスト！プロッシモ）というイタリアンレストランのInstagramキャプションを書く専門家です。
+  const tonePrompt = currentAccount.tonePrompts[selectedTone] || '';
+  const systemPrompt = `${currentAccount.systemPrompt}
 
-お店について：
-- 千葉駅近く（創業29年）の人気イタリアン
-- 「千産千消」がテーマ：房総・千葉の新鮮な地元食材を使用
-- 契約農家から直送の野菜、旬の魚介・肉
-- グラスワインは常時20種以上、ソムリエが選定
-- 1F：気軽なオステリア＆バー　2F：トラットリア
-- 食べログ「イタリアンEAST百名店2025」選出
-- 温かく活気ある雰囲気
-
-キャプションのルール：
-- 150〜200文字程度
-- ハッシュタグは必ず最後にまとめて5〜8個
-- 必ず「#エストプロッシモ」「#千産千消」「#千葉グルメ」を含める
-- 投稿日時・予約案内は含めない
-- 日本語のみ
-
-${tonePrompts[selectedTone]}
+トーン指示：${tonePrompt}
 
 3パターンのキャプションを生成してください。
 必ずこの形式でJSONのみ返してください（マークダウン不要）：
@@ -214,15 +355,13 @@ ${tonePrompts[selectedTone]}
   }
   userContent.push({
     type: 'text',
-    text: `料理名：${dishName}${memo ? '\n補足：' + memo : ''}\nトーン：${toneLabels[selectedTone]}`
+    text: `内容：${mainInput}${memo ? '\n補足：' + memo : ''}\nトーン：${selectedTone}`
   });
 
   try {
     const res = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-opus-4-6',
         max_tokens: 1000,
@@ -268,6 +407,8 @@ function copyCaption() {
     setTimeout(() => btn.textContent = 'コピーする', 2000);
   });
 }
+
+renderAccountList();
 </script>
 </body>
 </html>
