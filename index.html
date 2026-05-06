@@ -536,17 +536,17 @@ function copyCaption() {
   });
 }
 
-renderAccountList();
-
 // URLパラメーターで直接アカウントを開く
-(function() {
-  const params = new URLSearchParams(window.location.search);
-  const user = params.get('user');
-  if (user) {
-    const acc = ACCOUNTS.find(a => a.id === user);
-    if (acc) selectAccount(user);
-  }
-})();
+const urlParams = new URLSearchParams(window.location.search);
+const urlUser = urlParams.get('user');
+if (urlUser && ACCOUNTS.find(a => a.id === urlUser)) {
+  // 直接アカウント画面へ
+  document.getElementById('select-screen').style.display = 'none';
+  selectAccount(urlUser);
+} else {
+  // ポータル画面を表示
+  renderAccountList();
+}
 </script>
 </body>
 </html>
